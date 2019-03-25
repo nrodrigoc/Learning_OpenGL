@@ -6,11 +6,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-bool loadShaders(GLuint &program) {
+
+
+bool loadShaders(GLuint &program) { //GLuint >>> unsigned int comum
 
 	bool loadSuccess = true;
-	char infoLog[512];
-	GLint success;
+	char infoLog[512]; 
+	GLint success; //GLint >>> int comum
 
 	std::string temp = "";
 	std::string src = "";
@@ -18,7 +20,7 @@ bool loadShaders(GLuint &program) {
 	std::ifstream in_file;
 
 	//Vertex
-	in_file.open("vertex_core.glsl");
+	in_file.open("vertex_core.glsl"); //abrindo arquivo de Vertex Shaders
 
 	if (in_file.is_open()) {
 		while (std::getline(in_file, temp))
@@ -37,7 +39,9 @@ bool loadShaders(GLuint &program) {
 	glShaderSource(vertexShader, 1, &vertSrc, NULL);
 	glCompileShader(vertexShader);
 
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	//Verifica o que está acontecendo no VertexShader e retorna o resultado na var Success
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success); 
+
 	if (!success)
 	{
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
@@ -101,6 +105,7 @@ bool loadShaders(GLuint &program) {
 
 
 	//End
+	//Finalizando os Vertex Shader e Fragment Shader 
 	glUseProgram(0);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
