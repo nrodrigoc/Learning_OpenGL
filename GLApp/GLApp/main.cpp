@@ -1,13 +1,21 @@
 #include "libs.h"
 
+/*Fecha a janela utilizando o ESC*/
+void updateInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	{
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
+}
+
 /**Metodo utilizado para adequar a resolucao do framebuffer*/
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
 
-
-
+/* Carregamento dos shaders na GPU*/
 bool loadShaders(GLuint &program) { //GLuint >>> unsigned int comum
 
 	bool loadSuccess = true;
@@ -115,7 +123,6 @@ bool loadShaders(GLuint &program) { //GLuint >>> unsigned int comum
 }
 
 
-
 int main() {
 
 	//INIT GLFW
@@ -152,14 +159,25 @@ int main() {
 		glfwTerminate();
 	}
 
+	//OPENGL OPTIONS (opções necessárias antes de renderizar alguma coisa
+	glEnable(GL_DEPTH_TEST);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);//Counter Clock Wise --> Diz ao OpenGL qual face deverá ser desenhada de acordo com a ordem dos vetores
+
+	glEnable(GL_BLEND); // --> habilita a mistura de cores
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // ->> Desenhar poligonos com cores
+
 	//SHADER INIT
 	GLuint core_program;
 	if (!loadShaders(core_program)) {
 		glfwTerminate();
 	}
 	
-
-
 
 
 	//MAIN LOOP
@@ -171,6 +189,8 @@ int main() {
 
 
 		//UPDATE
+		updateInput(window);
+
 
 		//DRAW
 		//Clear
