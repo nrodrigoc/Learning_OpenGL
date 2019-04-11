@@ -23,11 +23,13 @@ private:
 
 
 public:
-	Material(glm::vec3 ambient,
-	glm::vec3 diffuse,
-	glm::vec3 specular,
-	GLint diffuseTex,
-	GLint specularTex)
+	Material(
+		glm::vec3 ambient,
+		glm::vec3 diffuse,
+		glm::vec3 specular,
+		GLint diffuseTex,
+		GLint specularTex
+	)
 	{
 		this->ambient = ambient;
 		this->diffuse = diffuse;
@@ -40,12 +42,12 @@ public:
 	~Material() {}
 
 	//Function
-	void sendToShader(Shader &programID) {
-		programID.setVec3f(this->ambient, "material.ambient");
-		programID.setVec3f(this->diffuse, "material.diffuse");
-		programID.setVec3f(this->specular, "material.specular");
-		programID.set1i(this->diffuseTex, "material.diffuseTex");
-		programID.set1i(this->specularTex, "material.specularTex");
-
+	void sendToShader(Shader& program)
+	{
+		program.setVec3f(this->ambient, "material.ambient");
+		program.setVec3f(this->diffuse, "material.diffuse");
+		program.setVec3f(this->specular, "material.specular");
+		program.set1i(this->diffuseTex, "material.diffuseTex");
+		program.set1i(this->specularTex, "material.specularTex");
 	}
 };

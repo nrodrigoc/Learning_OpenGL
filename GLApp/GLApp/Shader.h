@@ -20,6 +20,9 @@ class Shader
 private:
 	//Member variables
 	GLuint id;
+	const int versionMajor;
+	const int versionMinor; 
+
 
 	//Funcoes privadas
 	std::string loadShaderSource(const char* fileName)
@@ -39,6 +42,11 @@ private:
 		}
 		else
 			std::cout << "ERROR::SHADERS::COULD_NOT_OPEN_FILE" << fileName << "\n";
+
+
+		std::string versionNr = std::to_string(this->versionMajor) + std::to_string(this->versionMinor) + "0";
+		
+		src.replace(src.find("#version"), 12, "#version " + versionNr);
 
 		in_file.close();
 
@@ -101,7 +109,9 @@ private:
 
 public:
 	//Construtores / Destruidores
-	Shader(const char* vertexFile,const char* fragmentFile, const char* geometryFile = "")
+	Shader(const int versionMajor, const int versionMinor,
+		const char* vertexFile, const char* fragmentFile, const char* geometryFile = "")
+		: versionMajor(versionMajor), versionMinor(versionMinor)
 	{
 
 		GLuint vertexShader = 0;
