@@ -87,9 +87,12 @@ private:
 
 
 		//GEN EBO AND BIND AND SEND DATA
-		glGenBuffers(1, &EBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->nrOfIndices * sizeof(GLuint), indexArray, GL_STATIC_DRAW);
+		if (this->nrOfIndices > 0)
+		{
+			glGenBuffers(1, &EBO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->nrOfIndices * sizeof(GLuint), indexArray, GL_STATIC_DRAW);
+		}
 
 		//SET VERTEXATTRIBPOINTERS AND ENABLE (ASSEMBLY INPUT) 
 		//Position
@@ -154,7 +157,9 @@ public:
 	{
 		glDeleteVertexArrays(1, &this->VAO);
 		glDeleteBuffers(1, &this->VBO);
-		glDeleteBuffers(1, &this->EBO);
+
+		if(this->nrOfIndices > 0)
+			glDeleteBuffers(1, &this->EBO);
 	}
 
 	//Accessors
@@ -205,8 +210,11 @@ public:
 		//Bind VAO
 		glBindVertexArray(this->VAO);
 
-		//Draw
-		glDrawElements(GL_TRIANGLES, this->nrOfIndices, GL_UNSIGNED_INT, 0);
+		//RENDER
+		if (this->nrOfIndices == 0)
+			glDrawArrays(GL_TRIANGLES, 0, this->nrOfVertices);
+		else
+			glDrawElements(GL_TRIANGLES, this->nrOfIndices, GL_UNSIGNED_INT, 0);
 	}
 
 };

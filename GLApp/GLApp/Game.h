@@ -64,6 +64,7 @@ private:
 	void initLights();
 	void initUniforms();
 
+	void updateInput(GLFWwindow* window, Mesh &mesh);
 	void updateUniforms();
 
 //Static Variables

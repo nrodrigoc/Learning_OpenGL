@@ -27,8 +27,8 @@ public:
 		glm::vec3 ambient,
 		glm::vec3 diffuse,
 		glm::vec3 specular,
-		GLint diffuseTex,
-		GLint specularTex
+		GLint diffuseTex, //ID DA TEXTURA
+		GLint specularTex //ID DA TEXTURA SPECULAR
 	)
 	{
 		this->ambient = ambient;

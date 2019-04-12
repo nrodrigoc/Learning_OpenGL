@@ -110,7 +110,7 @@ void Game::initMashes()
 {
 	this->meshes.push_back(
 		new Mesh(
-			&Quad(),
+			&Pyramid(),
 			glm::vec3(0.f),
 			glm::vec3(0.f),
 			glm::vec3(1.f)
@@ -135,9 +135,6 @@ void Game::initUniforms()
 
 void Game::updateUniforms()
 {
-	//Update uniforms
-	this->materials[MAT_1]->sendToShader(*this->shaders[SHADER_CORE_PROGRAM]);
-
 	//Update framebuffer size and projection matrix
 	glfwGetFramebufferSize(this->window, &this->framebufferWidth, &this->framebufferHeight);
 
@@ -234,11 +231,11 @@ void Game::setWindowShouldClose()
 void Game::update()
 {
 	//Update Inputs
-	//this->updateInput();
+	this->updateInput(this->window, *this->meshes[MESH_QUAD]);
 	glfwPollEvents();
 }
 
-/*void Game::updateInput(GLFWwindow* window, Mesh &mesh)
+void Game::updateInput(GLFWwindow* window, Mesh &mesh)
 {
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
@@ -258,11 +255,19 @@ void Game::update()
 	}
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		mesh.rotate(glm::vec3(0.f, -0.08, 0.f));
+		mesh.rotate(glm::vec3(0.f, -0.1f, 0.f));
 	}
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
-		mesh.rotate(glm::vec3(0.f, 0.08, 0.f));
+		mesh.rotate(glm::vec3(0.f, 0.1f, 0.f));
+	}
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		mesh.rotate(glm::vec3(-0.1f, 0.0, 0.f));
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		mesh.rotate(glm::vec3(0.1f, 0.0, 0.f));
 	}
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
 		mesh.scaleUp(glm::vec3(0.01f));
@@ -270,7 +275,7 @@ void Game::update()
 		mesh.scaleUp(glm::vec3(-0.01f));
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
-}*/
+}
 
 void Game::render()
 {
@@ -284,14 +289,17 @@ void Game::render()
 	//Update uniforms (dados enviados da CPU pra GPU)
 	this->updateUniforms();
 
+	//Update uniforms
+	this->materials[MAT_1]->sendToShader(*this->shaders[SHADER_CORE_PROGRAM]);
+
 	//Use a program
 	this->shaders[SHADER_CORE_PROGRAM]->use();
 
 	//Activate Texture
+	//this->textures[TEX_CONTAINER]->bind(0);
+	//this->textures[TEX_CONTAINER_SPECULAR]->bind(1);
 	this->textures[TEX_CATINHO]->bind(0);
 	//this->textures[TEX_CATINHO_SPECULAR]->bind(1);
-	//this->textures[TEX_CONTAINER]->bind();
-	//this->textures[TEX_CONTAINER]->bind(0);
 
 	//Draw
 	this->meshes[MESH_QUAD]->render(this->shaders[SHADER_CORE_PROGRAM]);
