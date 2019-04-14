@@ -2,7 +2,7 @@
 
 
 int main() {
-	Game game("JANELINHA", 640, 480, 4, 4, true);
+	Game game("JANELINHA", 1020, 760, 4, 4, true);
 
 	//MAIN LOOP
 	while (!game.getWindowShouldClose()) {

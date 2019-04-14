@@ -68,6 +68,10 @@ void Game::initOpenGLOptions()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	//Input
+	glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 }
 
 void Game::initMatrices()
@@ -130,11 +134,16 @@ void Game::initUniforms()
 	this->shaders[SHADER_CORE_PROGRAM]->setMat4fv(ProjectionMatrix, "ProjectionMatrix");
 
 	this->shaders[SHADER_CORE_PROGRAM]->setVec3f(*this->lights[0], "lightPos0");
-	this->shaders[SHADER_CORE_PROGRAM]->setVec3f(this->cameraPos, "cameraPos");
 }
 
 void Game::updateUniforms()
 {
+	//Update ViewMatrix
+	this->ViewMatrix = this->camera.getViewMatrix();
+
+	this->shaders[SHADER_CORE_PROGRAM]->setMat4fv(this->ViewMatrix, "ViewMatrix");
+	this->shaders[SHADER_CORE_PROGRAM]->setVec3f(this->camera.getPosition(), "cameraPos");
+
 	//Update framebuffer size and projection matrix
 	glfwGetFramebufferSize(this->window, &this->framebufferWidth, &this->framebufferHeight);
 
@@ -143,9 +152,9 @@ void Game::updateUniforms()
 		static_cast<float>(this->framebufferWidth) / this->framebufferHeight,
 		this->nearPlane,
 		this->farPlane
-	);
+);
 
-	this->shaders[SHADER_CORE_PROGRAM]->setMat4fv(this->ProjectionMatrix, "ProjectionMatrix");
+this->shaders[SHADER_CORE_PROGRAM]->setMat4fv(this->ProjectionMatrix, "ProjectionMatrix");
 }
 
 //Construtctors / Distructors
@@ -157,8 +166,9 @@ Game::Game(
 )
 	: SCR_WIDTH(SCR_WIDTH),
 	SCR_HEIGHT(SCR_HEIGHT),
-	GL_VERSION_MAJOR(GL_VERSION_MAJOR), 
-	GL_VERSION_MINOR(GL_VERSION_MINOR)
+	GL_VERSION_MAJOR(GL_VERSION_MAJOR),
+	GL_VERSION_MINOR(GL_VERSION_MINOR),
+	camera(glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, 0.f, 1.f), glm::vec3(0.f, 1.f, 0.f))
 {
 	//Init Variables
 	this->window = nullptr;
@@ -174,6 +184,18 @@ Game::Game(
 	this->fov = 90.f;
 	this->nearPlane = 0.1f;
 	this->farPlane = 1000.f; //Distancia que o desenho sera renderizado
+
+	this->dt = 0.f;
+	this->curTime = 0.f;
+	this->lastTime = 0.f;
+
+	this->lastMouseX = 0.0;
+	this->lastMouseY = 0.0;
+	this->mouseX = 0.0;
+	this->mouseY = 0.0;
+	this->mouseOffsetX = 0.0;
+	this->mouseOffsetY = 0.0;
+	this->firstMouse = true;
 
 	this->initGLFW();
 	this->initWindow(title, resizable);
@@ -196,16 +218,16 @@ Game::~Game()
 	glfwDestroyWindow(this->window);
 	glfwTerminate();
 
-	for (size_t i = 0; i < this->shaders.size(); i++){
+	for (size_t i = 0; i < this->shaders.size(); i++) {
 		delete this->shaders[i];
 	}
-	for (size_t i = 0; i < this->textures.size(); i++){
+	for (size_t i = 0; i < this->textures.size(); i++) {
 		delete this->textures[i];
 	}
-	for (size_t i = 0; i < this->materials.size(); i++){
+	for (size_t i = 0; i < this->materials.size(); i++) {
 		delete this->materials[i];
 	}
-	for (size_t i = 0; i < this->meshes.size(); i++){
+	for (size_t i = 0; i < this->meshes.size(); i++) {
 		delete this->meshes[i];
 	}
 	for (size_t i = 0; i < this->lights.size(); i++) {
@@ -226,60 +248,92 @@ void Game::setWindowShouldClose()
 	glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+void Game::updateDt()
+{
+	this->curTime = static_cast<float>(glfwGetTime());
+	this->dt = this->curTime - this->lastTime;
+	this->lastTime = this->curTime;
+
+	std::cout << "DT: " << this->dt << "\n"
+		<< "Mouse offsetX: " << this->mouseOffsetX << " Mouse offsetY: " << this->mouseOffsetY << "\n";
+}
+
+void Game::updateMouseInput()
+{
+	glfwGetCursorPos(this->window, &this->mouseX, &this->mouseY);
+
+	if (this->firstMouse)
+	{
+		this->lastMouseX = this->mouseX;
+		this->lastMouseY = this->mouseY;
+		this->firstMouse = false;
+	}
+
+	//Calc Offset
+	this->mouseOffsetX = this->mouseX - this->lastMouseX;
+	this->mouseOffsetY = this->mouseY - this->lastMouseY;
+
+	//Set last X and Y
+	this->lastMouseX = this->mouseX;
+	this->lastMouseY = this->mouseY;
+}
 
 //Functions 
+void Game::updateKeyboardInput()
+{
+	//Program
+	if (glfwGetKey(this->window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	{
+		setWindowShouldClose();
+	}
+
+	//Camera
+	if (glfwGetKey(this->window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		this->camera.move(this->dt, FOWARD);
+	}
+	if (glfwGetKey(this->window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		this->camera.move(this->dt, BACKWARD);
+	}
+	if (glfwGetKey(this->window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		this->camera.move(this->dt, LEFT);
+	}
+	if (glfwGetKey(this->window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		this->camera.move(this->dt, RIGHT);
+	}
+	if (glfwGetKey(this->window, GLFW_KEY_Z) == GLFW_PRESS)
+	{
+		this->cameraPos.y -= 0.005f;
+	}
+	if (glfwGetKey(this->window, GLFW_KEY_X) == GLFW_PRESS)
+	{
+		this->cameraPos.y += 0.005f;
+	}
+}
+
+void Game::updateInput()
+{
+	glfwPollEvents();
+
+	this->updateKeyboardInput();
+	this->updateMouseInput();
+	this->camera.updateInput(dt, -1, this->mouseOffsetX, this->mouseOffsetY);
+}
+
 void Game::update()
 {
 	//Update Inputs
-	this->updateInput(this->window, *this->meshes[MESH_QUAD]);
-	glfwPollEvents();
-}
+	this->updateDt();
+	this->updateInput();
 
-void Game::updateInput(GLFWwindow* window, Mesh &mesh)
-{
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		mesh.move(glm::vec3(0.f, 0.f, -0.005f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		mesh.move(glm::vec3(0.f, 0.f, 0.005f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		mesh.move(glm::vec3(-0.005f, 0.f, 0.f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		mesh.move(glm::vec3(0.005f, 0.f, 0.f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-	{
-		mesh.rotate(glm::vec3(0.f, -0.1f, 0.f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-	{
-		mesh.rotate(glm::vec3(0.f, 0.1f, 0.f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	{
-		mesh.rotate(glm::vec3(-0.1f, 0.0, 0.f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	{
-		mesh.rotate(glm::vec3(0.1f, 0.0, 0.f));
-	}
-	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-		mesh.scaleUp(glm::vec3(0.01f));
-	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-		mesh.scaleUp(glm::vec3(-0.01f));
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	this->meshes[0]->rotate(glm::vec3(0.f, 0.5f, 0.f));
 }
 
 void Game::render()
 {
-	//updateInput(window);
 
 	//DRAW
 	//Clear
@@ -296,9 +350,9 @@ void Game::render()
 	this->shaders[SHADER_CORE_PROGRAM]->use();
 
 	//Activate Texture
-	//this->textures[TEX_CONTAINER]->bind(0);
-	//this->textures[TEX_CONTAINER_SPECULAR]->bind(1);
-	this->textures[TEX_CATINHO]->bind(0);
+	this->textures[TEX_CONTAINER]->bind(0);
+	this->textures[TEX_CONTAINER_SPECULAR]->bind(1);
+	//this->textures[TEX_CATINHO]->bind(0);
 	//this->textures[TEX_CATINHO_SPECULAR]->bind(1);
 
 	//Draw
